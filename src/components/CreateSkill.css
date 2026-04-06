@@ -1,0 +1,214 @@
+.create-skill-container {
+  display: flex;
+  flex-direction: column;
+  gap: 2.5rem;
+}
+
+.create-skill-header-section {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.title-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.title-group {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.title-group h2 {
+  font-size: 2.5rem;
+  font-weight: 800;
+  margin: 0;
+  color: var(--on-surface);
+  line-height: 1.1;
+}
+
+.icon-primary {
+  color: var(--primary);
+}
+
+.mode-toggle {
+  display: flex;
+  background-color: #e2e4d9;
+  padding: 0.375rem;
+  border-radius: var(--radius-full);
+  gap: 0.25rem;
+}
+
+.mode-btn {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1.25rem;
+  border-radius: var(--radius-full);
+  border: none;
+  background: none;
+  color: var(--on-surface-variant);
+  font-weight: 600;
+  font-size: 0.875rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.mode-btn.active {
+  background-color: var(--surface-container-lowest);
+  color: var(--on-surface);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+.create-skill-description {
+  font-size: 1rem;
+  color: var(--on-surface-variant);
+  max-width: 700px;
+  margin: 0;
+  line-height: 1.6;
+}
+
+.create-skill-form {
+  display: flex;
+  flex-direction: column;
+  gap: 3rem;
+  max-width: 1100px;
+}
+
+.form-sections-grid {
+  display: grid;
+  grid-template-columns: 1.5fr 1fr;
+  gap: 3rem;
+}
+
+.form-section-main, .form-section-side {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+}
+
+.info-box {
+  background-color: var(--surface-container-high);
+  padding: 1.75rem;
+  border-radius: var(--radius-xl);
+  border: 1px solid var(--outline-variant);
+}
+
+.info-box h4 {
+  margin: 0 0 0.75rem 0;
+  color: var(--on-surface);
+  font-weight: 700;
+  font-size: 0.9375rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.info-box p {
+  margin: 0;
+  font-size: 0.875rem;
+  color: var(--on-surface-variant);
+  line-height: 1.6;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.form-group label {
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--outline);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.form-group input,
+.form-group textarea {
+  padding: 1rem 1.25rem;
+  border: 1px solid var(--outline-variant);
+  border-radius: var(--radius-md);
+  font-size: 1rem;
+  color: var(--on-surface);
+  background-color: var(--surface-container-lowest);
+  transition: all 0.2s ease;
+  font-family: inherit;
+}
+
+.form-group input:hover,
+.form-group textarea:hover {
+  border-color: var(--outline);
+}
+
+.form-group input:focus,
+.form-group textarea:focus {
+  outline: none;
+  border-color: var(--primary);
+  box-shadow: 0 0 0 4px rgba(97, 94, 87, 0.05);
+}
+
+.form-actions {
+  display: flex;
+  gap: 1rem;
+  justify-content: flex-end;
+  padding-top: 2rem;
+  border-top: 1px solid var(--outline-variant);
+}
+
+.btn-primary {
+  background-color: var(--primary);
+  color: var(--on-primary);
+  padding: 0.875rem 2rem;
+  border-radius: var(--radius-md);
+  font-weight: 700;
+  font-size: 0.9375rem;
+  transition: background-color 0.2s ease;
+}
+
+.btn-primary:hover {
+  background-color: var(--primary-dim);
+}
+
+.btn-secondary {
+  background-color: var(--surface-container-high);
+  color: var(--on-surface);
+  padding: 0.875rem 2rem;
+  border-radius: var(--radius-md);
+  font-weight: 700;
+  font-size: 0.9375rem;
+  transition: background-color 0.2s ease;
+}
+
+.btn-secondary:hover {
+  background-color: var(--surface-dim);
+}
+
+.terminal-wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  max-width: 1000px;
+}
+
+.terminal-info {
+  background-color: var(--surface-container-high);
+  padding: 1.25rem 1.5rem;
+  border-radius: var(--radius-xl);
+  font-size: 0.875rem;
+  color: var(--on-surface-variant);
+  border: 1px solid var(--outline-variant);
+}
+
+.terminal-info code {
+  background-color: var(--surface-container-lowest);
+  padding: 0.2rem 0.5rem;
+  border-radius: 4px;
+  color: var(--on-surface);
+  font-family: monospace;
+  font-weight: 600;
+  border: 1px solid var(--outline-variant);
+}
