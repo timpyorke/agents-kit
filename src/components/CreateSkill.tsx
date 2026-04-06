@@ -199,7 +199,7 @@ export const CreateSkill = ({ onSkillCreated, onCancel }: CreateSkillProps) => {
               <div className="info-box">
                 <h4>Creating a Skill</h4>
                 <p>
-                  Skills are stored as SKILL.md files in your ~/.agent-skills directory. The name must
+                  Skills are stored as SKILL.md files in your ~/.agents/skills directory. The name must
                   be unique and contain only letters, numbers, hyphens, and underscores.
                 </p>
               </div>

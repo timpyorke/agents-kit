@@ -38,7 +38,7 @@ fn get_skills_dir(app_handle: &tauri::AppHandle) -> Result<PathBuf, String> {
         Ok(dir) => dir,
         Err(e) => return Err(format!("Could not find home directory: {}", e)),
     };
-    Ok(home_dir.join(".agent-skills"))
+    Ok(home_dir.join(".agents/skills"))
 }
 
 fn get_skill_dir(app_handle: &tauri::AppHandle, name: &str) -> Result<PathBuf, String> {
@@ -203,7 +203,7 @@ fn update_skill(
 #[tauri::command]
 fn get_project_skills(project_path: String) -> Result<Vec<ProjectSkill>, String> {
     let mut skills = Vec::new();
-    let project_skills_dir = PathBuf::from(&project_path).join(".agent-skills");
+    let project_skills_dir = PathBuf::from(&project_path).join(".agents/skills");
 
     if !project_skills_dir.exists() || !project_skills_dir.is_dir() {
         return Ok(skills);
@@ -253,9 +253,9 @@ fn link_skill_to_project(
         return Err(format!("Skill '{}' not found", skill_name));
     }
 
-    let project_skills_dir = PathBuf::from(&project_path).join(".agent-skills");
+    let project_skills_dir = PathBuf::from(&project_path).join(".agents/skills");
     fs::create_dir_all(&project_skills_dir)
-        .map_err(|e| format!("Failed to create project .agent-skills directory: {}", e))?;
+        .map_err(|e| format!("Failed to create project .agents/skills directory: {}", e))?;
 
     let link_path = project_skills_dir.join(&skill_name);
     if link_path.exists() || link_path.is_symlink() {
@@ -286,7 +286,7 @@ fn unlink_skill_from_project(
     project_path: String,
 ) -> Result<(), String> {
     let link_path = PathBuf::from(&project_path)
-        .join(".agent-skills")
+        .join(".agents/skills")
         .join(&skill_name);
 
     if !link_path.exists() && !link_path.is_symlink() {

@@ -8,16 +8,16 @@ This document provides instructions for Gemini 1.5 Pro/Flash on how to interact 
 
 This project utilizes a dual-layered skill system. You (the Agent) should prioritize skills found in the local project directory while being aware of the global capabilities.
 
-| Scope | Path | Description |
-| :--- | :--- | :--- |
-| **Project** | `./.agent-skills/` | Project-specific logic and symlinked global tools. |
-| **Global** | `~/.agent-skills/` | Your core toolkit available across all projects. |
+| Scope       | Path               | Description                                        |
+| :---------- | :----------------- | :------------------------------------------------- |
+| **Project** | `./.agent/skills`  | Project-specific logic and symlinked global tools. |
+| **Global**  | `~/.agents/skills` | Your core toolkit available across all projects.   |
 
 ## 🛠️ Agent Instructions
 
 ### 1. Skill Discovery
 
-Before performing complex tasks (e.g., refactoring, test generation, or architecture planning), check the `./.agent-skills/` directory.
+Before performing complex tasks (e.g., refactoring, test generation, or architecture planning), check the `./.agents/skills/` directory.
 
 - **If a relevant script exists:** Execute it or follow its prompt instructions.
 - **If no skill exists:** Perform the task using your base knowledge, but suggest creating a new "Skill" if the task seems repetitive.
@@ -43,12 +43,12 @@ To initialize a session with these skills, the user may use the following patter
 
 ```bash
 # Example of injecting project skills into Gemini CLI
-gemini-cli --system-prompt "$(cat .agent-skills/current-context.md)" --prompt "Your task here"
+gemini-cli --system-prompt "$(cat .agents/skills/current-context.md)" --prompt "Your task here"
 ```
 
 ## ⚠️ Constraints
 
-- **Symlink Integrity:** Do not attempt to move or delete files in `./.agent-skills/` directly via shell commands unless explicitly asked; these are often symlinks managed by the Tauri GUI.
+- **Symlink Integrity:** Do not attempt to move or delete files in `./.agents/skills/` directly via shell commands unless explicitly asked; these are often symlinks managed by the Tauri GUI.
 - **Token Efficiency:** Only read the skills relevant to the current task to optimize the context window.
 
 ## 🗂️ Metadata for Manager

@@ -6,7 +6,7 @@
 
 - **Skill Orchestration:** A centralized hub to manage capabilities for multiple AI agents.
 - **Global & Project Scoping:**
-  - **Global Skills:** A personal "arsenal" of skills stored in your home directory (`~/.agent-skills`).
+  - **Global Skills:** A personal "arsenal" of skills stored in your home directory (`~/.agents/skills`).
   - **Project-Specific Skills:** Link specific skills to your local coding projects via Symlinks for easy updates and zero redundancy.
 - **Multi-Agent Compatibility:** Designed to interface seamlessly with Gemini CLI, Claude Code, and custom AI wrappers.
 - **Native Performance:** Built with Rust (Tauri) for secure, lightning-fast file system operations and React for a modern, responsive UI.
@@ -60,14 +60,14 @@ This project utilizes a Hybrid Desktop Architecture:
 │   │   ├── main.rs     # Tauri Commands (Symlink Logic, FS Scanner)
 │   │   └── skills.rs   # Skill Data Models & Persistence
 │   └── Cargo.toml      # Rust Dependencies (Serde, Dirs, etc.)
-└── .agent-skills/      # Local skill directory example
+└── .agents/skills/      # Local skill directory example
 ```
 
 ## 🛠️ How It Works
 
 1.  **Define a Skill:** Create a script or prompt configuration within the GUI.
 2.  **Save to Global:** Store it in your machine's global directory to reuse across any project.
-3.  **Install to Project:** Select a project folder; the app creates a `.agent-skills/` directory and generates a Symlink to the global store.
+3.  **Install to Project:** Select a project folder; the app creates a `.agents/skills/` directory and generates a Symlink to the global store.
 4.  **Agent Discovery:** Point your Gemini/Claude CLI to the project's skill folder to instantly "level up" your agent.
 
 ## 🤝 Contributing

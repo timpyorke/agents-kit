@@ -102,7 +102,7 @@ export const ProjectManager = ({ onBack }: ProjectManagerProps) => {
         <div className="pm-content">
           <div className="pm-section">
             <h3>Linked Skills</h3>
-            <p className="pm-section-path">{confirmedPath}/.agent-skills/</p>
+            <p className="pm-section-path">{confirmedPath}/.agents/skills/</p>
             {loading ? (
               <div className="pm-loading"><Loader2 size={20} className="spin" /></div>
             ) : projectSkills.length === 0 ? (
