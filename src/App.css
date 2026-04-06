@@ -186,6 +186,16 @@ body {
   color: var(--on-primary-container);
 }
 
+.agent-nav-item.disabled {
+  opacity: 0.4;
+  cursor: default;
+  pointer-events: none;
+}
+
+.nav-count.disabled {
+  opacity: 0.6;
+}
+
 .nav-section {
   margin-top: 2rem;
 }

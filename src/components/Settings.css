@@ -1,0 +1,333 @@
+.settings-container {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+  max-width: 720px;
+}
+
+.settings-header {
+  display: flex;
+  flex-direction: column;
+  gap: 0.375rem;
+}
+
+.settings-title-row {
+  display: flex;
+  align-items: center;
+  gap: 0.625rem;
+}
+
+.settings-title-row h2 {
+  font-size: 1.5rem;
+  font-weight: 700;
+  margin: 0;
+}
+
+.settings-header p {
+  font-size: 0.9375rem;
+  color: var(--on-surface-variant);
+  margin: 0;
+}
+
+.settings-toast {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1rem;
+  border-radius: var(--radius-md);
+  font-size: 0.8125rem;
+  font-weight: 600;
+}
+
+.settings-toast.ok {
+  background-color: rgba(76, 175, 80, 0.1);
+  color: #2e7d32;
+}
+
+.settings-toast.err {
+  background-color: rgba(158, 66, 44, 0.08);
+  color: var(--error);
+}
+
+/* Section */
+.settings-section {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.section-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+}
+
+.section-head h3 {
+  font-size: 1.125rem;
+  font-weight: 700;
+  margin: 0;
+}
+
+.section-desc {
+  font-size: 0.8125rem;
+  color: var(--outline);
+  margin: 0.25rem 0 0 0;
+}
+
+.settings-card-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  background-color: var(--surface-container-low);
+  border-radius: var(--radius-xl);
+  padding: 0.75rem;
+}
+
+/* Agent Row */
+.settings-agent-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.875rem 1rem;
+  border-radius: var(--radius-md);
+  background-color: var(--surface-container-lowest);
+  transition: background-color 0.2s ease;
+}
+
+.settings-agent-row.on {
+  background-color: var(--surface-container-lowest);
+}
+
+.settings-agent-row:not(.on) {
+  opacity: 0.55;
+}
+
+.sar-info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.375rem;
+  flex-grow: 1;
+  min-width: 0;
+}
+
+.sar-info h4 {
+  font-size: 0.875rem;
+  font-weight: 700;
+  margin: 0;
+  color: var(--on-surface);
+}
+
+.sar-path-row {
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+}
+
+.sar-path-icon {
+  color: var(--outline);
+  flex-shrink: 0;
+}
+
+.sar-path-input {
+  font-size: 0.75rem;
+  font-family: var(--font-label), monospace;
+  color: var(--on-surface-variant);
+  background: transparent;
+  padding: 0.25rem 0.5rem;
+  border-radius: var(--radius-sm, 0.375rem);
+  width: 100%;
+  outline: none;
+}
+
+.sar-path-input:focus {
+  background-color: var(--surface-container-high);
+}
+
+.sar-path-input:disabled {
+  opacity: 0.5;
+}
+
+/* Toggle */
+.sar-toggle {
+  position: relative;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.sar-toggle input {
+  position: absolute;
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.sar-toggle-track {
+  display: block;
+  width: 40px;
+  height: 22px;
+  border-radius: 11px;
+  background-color: var(--surface-dim);
+  transition: background-color 0.2s ease;
+  position: relative;
+}
+
+.sar-toggle-track::after {
+  content: "";
+  position: absolute;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background-color: var(--surface-container-lowest);
+  top: 3px;
+  left: 3px;
+  transition: transform 0.2s ease;
+}
+
+.sar-toggle input:checked + .sar-toggle-track {
+  background-color: var(--primary);
+}
+
+.sar-toggle input:checked + .sar-toggle-track::after {
+  transform: translateX(18px);
+}
+
+/* Fields */
+.settings-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  padding: 0.875rem 1rem;
+}
+
+.settings-field label {
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--outline);
+  font-family: var(--font-label);
+}
+
+.settings-input {
+  font-size: 0.9375rem;
+  color: var(--on-surface);
+  background-color: var(--surface-container-lowest);
+  padding: 0.625rem 0.875rem;
+  border-radius: var(--radius-md);
+  outline: none;
+  font-family: inherit;
+  transition: background-color 0.2s ease;
+}
+
+.settings-input:focus {
+  background-color: var(--surface-bright);
+}
+
+.settings-stats {
+  display: flex;
+  gap: 2rem;
+  padding: 1rem;
+}
+
+.ss-item {
+  display: flex;
+  flex-direction: column;
+  gap: 0.125rem;
+}
+
+.ss-value {
+  font-size: 1.5rem;
+  font-weight: 800;
+  color: var(--on-surface);
+}
+
+.ss-label {
+  font-size: 0.6875rem;
+  color: var(--outline);
+  font-weight: 600;
+  font-family: var(--font-label);
+}
+
+/* Data Row */
+.settings-data-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1rem;
+  background-color: var(--surface-container-lowest);
+  border-radius: var(--radius-md);
+}
+
+.settings-data-row h4 {
+  font-size: 0.9375rem;
+  font-weight: 700;
+  margin: 0 0 0.25rem 0;
+  color: var(--on-surface);
+}
+
+.settings-data-row p {
+  font-size: 0.75rem;
+  color: var(--outline);
+  margin: 0;
+}
+
+.sd-btn {
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+  padding: 0.5rem 1.25rem;
+  border-radius: var(--radius-md);
+  font-size: 0.8125rem;
+  font-weight: 700;
+  background-color: var(--primary);
+  color: var(--on-primary);
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.sd-btn:hover:not(:disabled) {
+  background-color: var(--primary-dim);
+}
+
+.sd-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Save Bar */
+.settings-save-bar {
+  display: flex;
+  justify-content: flex-end;
+  padding-top: 1rem;
+}
+
+.settings-save-btn {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 2rem;
+  border-radius: var(--radius-md);
+  font-size: 0.875rem;
+  font-weight: 700;
+  background-color: var(--primary);
+  color: var(--on-primary);
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.settings-save-btn:hover {
+  background-color: var(--primary-dim);
+}
+
+.spin {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}

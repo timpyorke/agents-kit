@@ -1,19 +1,32 @@
 import { useState } from "react";
 import { Puzzle, Search, Trash2, Loader2 } from "lucide-react";
-import { useGlobalSkills, useDeleteSkill } from "../hooks/useGlobalSkills";
+import { useGlobalSkills, useDeleteSkill, useSkillsWatcher } from "../hooks/useGlobalSkills";
 import { Skill } from "../types";
+import { SkillDetailView } from "./SkillDetail";
 import "./Skills.css";
 
 interface SkillsProps {
-  onSelectSkill: (skill: Skill) => void;
   onSkillDeleted?: () => void;
 }
 
-export const Skills = ({ onSelectSkill, onSkillDeleted }: SkillsProps) => {
+export const Skills = ({ onSkillDeleted }: SkillsProps) => {
   const { globalSkills, loading, error, refetch } = useGlobalSkills();
   const { deleteSkill, loading: deleting } = useDeleteSkill();
   const [search, setSearch] = useState("");
   const [confirmDelete, setConfirmDelete] = useState<string | null>(null);
+  const [selectedSkill, setSelectedSkill] = useState<Skill | null>(null);
+  const [detailRefresh, setDetailRefresh] = useState(0);
+
+  useSkillsWatcher((event) => {
+    refetch();
+    if (selectedSkill && event.name === selectedSkill.name) {
+      if (event.kind === "deleted") {
+        setSelectedSkill(null);
+      } else {
+        setDetailRefresh((n) => n + 1);
+      }
+    }
+  });
 
   const filteredSkills = globalSkills.filter((skill) => {
     if (!search) return true;
@@ -90,8 +103,8 @@ export const Skills = ({ onSelectSkill, onSkillDeleted }: SkillsProps) => {
           {filteredSkills.map((skill) => (
             <div
               key={skill.name}
-              className="skill-list-item"
-              onClick={() => onSelectSkill(skill)}
+              className={`skill-list-item ${selectedSkill?.name === skill.name ? "active" : ""}`}
+              onClick={() => setSelectedSkill(skill)}
             >
               <div className="skill-item-top">
                 <h3 className="skill-name">{skill.name}</h3>
@@ -120,8 +133,22 @@ export const Skills = ({ onSelectSkill, onSkillDeleted }: SkillsProps) => {
         </div>
       </div>
 
-      <div className="skill-detail-pane empty">
-        <p>Select a skill to view details</p>
+      <div className={`skill-detail-pane ${selectedSkill ? "has-skill" : "empty"}`}>
+        {selectedSkill ? (
+          <SkillDetailView
+            skill={selectedSkill}
+            onBack={() => setSelectedSkill(null)}
+            onDeleted={() => {
+              setSelectedSkill(null);
+              refetch();
+              onSkillDeleted?.();
+            }}
+            embedded
+            refreshTrigger={detailRefresh}
+          />
+        ) : (
+          <p>Select a skill to view details</p>
+        )}
       </div>
     </div>
   );

@@ -1,6 +1,8 @@
 use serde::{Deserialize, Serialize};
+use std::collections::HashMap;
 use std::fs;
 use std::path::PathBuf;
+use std::sync::Mutex;
 use tauri::Manager;
 
 #[derive(Serialize, Deserialize, Clone)]
@@ -336,6 +338,101 @@ async fn run_command(command: String) -> Result<String, String> {
     }
 }
 
+struct WatcherState {
+    watchers: HashMap<String, notify::RecommendedWatcher>,
+}
+
+#[tauri::command]
+fn watch_skills_dir(
+    app_handle: tauri::AppHandle,
+    state: tauri::State<'_, Mutex<WatcherState>>,
+) -> Result<String, String> {
+    let skills_dir = get_skills_dir(&app_handle)?;
+    fs::create_dir_all(&skills_dir)
+        .map_err(|e| format!("Failed to create skills dir: {}", e))?;
+
+    let app = app_handle.clone();
+    let (tx, rx) = std::sync::mpsc::channel::<notify::Result<notify::Event>>();
+
+    let mut watcher = notify::recommended_watcher(tx)
+        .map_err(|e| format!("Failed to create watcher: {}", e))?;
+
+    watcher.watch(&skills_dir, notify::RecursiveMode::NonRecursive)
+        .map_err(|e| format!("Failed to watch dir: {}", e))?;
+
+    let watcher_id = uuid::Uuid::new_v4().to_string();
+
+    std::thread::spawn(move || {
+        for res in rx {
+            if let Ok(event) = res {
+                for path in event.paths {
+                    if let Some(name) = path.file_name().and_then(|n| n.to_str()) {
+                        if name.starts_with('.') {
+                            continue;
+                        }
+                        if !path.is_dir() {
+                            continue;
+                        }
+                        let kind = match event.kind {
+                            notify::EventKind::Create(_) => "created",
+                            notify::EventKind::Modify(_) => "modified",
+                            notify::EventKind::Remove(_) => "deleted",
+                            _ => continue,
+                        };
+                        let _ = app.emit("skill-change", serde_json::json!({
+                            "kind": kind,
+                            "name": name,
+                        }));
+                    }
+                }
+            }
+        }
+    });
+
+    state.lock().unwrap().watchers.insert(watcher_id.clone(), watcher);
+    Ok(watcher_id)
+}
+
+#[tauri::command]
+fn stop_skills_watcher(
+    state: tauri::State<'_, Mutex<WatcherState>>,
+    watcher_id: String,
+) -> Result<(), String> {
+    state.lock().unwrap().watchers.remove(&watcher_id);
+    Ok(())
+}
+
+#[tauri::command]
+fn export_all_skills(app_handle: tauri::AppHandle) -> Result<Vec<serde_json::Value>, String> {
+    let skills_dir = get_skills_dir(&app_handle)?;
+    if !skills_dir.exists() {
+        return Ok(vec![]);
+    }
+
+    let mut result = Vec::new();
+    let entries = fs::read_dir(&skills_dir)
+        .map_err(|e| format!("Failed to read skills dir: {}", e))?;
+
+    for entry in entries.flatten() {
+        let path = entry.path();
+        if !path.is_dir() || path.file_name().map_or(true, |n| n.to_str().map_or(true, |s| s.starts_with('.'))) {
+            continue;
+        }
+        let name = entry.file_name().to_string_lossy().into_owned();
+        let metadata = read_metadata(&path).ok();
+        let content = fs::read_to_string(path.join("SKILL.md")).unwrap_or_default();
+
+        result.push(serde_json::json!({
+            "name": name,
+            "description": metadata.as_ref().and_then(|m| m.description.clone()),
+            "path": path.to_string_lossy(),
+            "content": content,
+        }));
+    }
+
+    Ok(result)
+}
+
 fn chrono_now() -> String {
     let now = std::time::SystemTime::now()
         .duration_since(std::time::UNIX_EPOCH)
@@ -347,6 +444,9 @@ fn chrono_now() -> String {
 pub fn run() {
     tauri::Builder::default()
         .plugin(tauri_plugin_opener::init())
+        .manage(Mutex::new(WatcherState {
+            watchers: HashMap::new(),
+        }))
         .invoke_handler(tauri::generate_handler![
             greet,
             run_command,
@@ -358,6 +458,9 @@ pub fn run() {
             get_project_skills,
             link_skill_to_project,
             unlink_skill_from_project,
+            watch_skills_dir,
+            stop_skills_watcher,
+            export_all_skills,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

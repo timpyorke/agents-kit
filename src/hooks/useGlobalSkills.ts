@@ -1,6 +1,12 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { invoke } from "@tauri-apps/api/core";
+import { listen, type UnlistenFn } from "@tauri-apps/api/event";
 import { Skill, SkillDetail } from "../types";
+
+interface SkillChangeEvent {
+  kind: "created" | "modified" | "deleted";
+  name: string;
+}
 
 export function useGlobalSkills() {
   const [globalSkills, setGlobalSkills] = useState<Skill[]>([]);
@@ -26,6 +32,46 @@ export function useGlobalSkills() {
   }, [fetchSkills]);
 
   return { globalSkills, loading, error, refetch: fetchSkills };
+}
+
+/** Start watching skills dir for real-time changes */
+export function useSkillsWatcher(onChange?: (event: SkillChangeEvent) => void) {
+  const watcherIdRef = useRef<string | null>(null);
+  const onChangeRef = useRef(onChange);
+  onChangeRef.current = onChange;
+
+  const start = useCallback(async () => {
+    try {
+      const id = await invoke<string>("watch_skills_dir");
+      watcherIdRef.current = id;
+      console.log("Skills watcher started:", id);
+    } catch (e) {
+      console.error("Failed to start skills watcher:", e);
+    }
+  }, []);
+
+  useEffect(() => {
+    let unlisten: UnlistenFn | undefined;
+
+    listen<SkillChangeEvent>("skill-change", (event) => {
+      console.log("Skill change:", event.payload);
+      onChangeRef.current?.(event.payload);
+    }).then((fn) => {
+      unlisten = fn;
+    });
+
+    start();
+
+    return () => {
+      unlisten?.();
+      if (watcherIdRef.current) {
+        invoke("stop_skills_watcher", { watcherId: watcherIdRef.current }).catch(() => {});
+        watcherIdRef.current = null;
+      }
+    };
+  }, [start]);
+
+  return { start };
 }
 
 export function useCreateSkill() {
@@ -79,7 +125,7 @@ export function useDeleteSkill() {
   return { deleteSkill, loading, error };
 }
 
-export function useSkillDetail(name: string | null) {
+export function useSkillDetail(name: string | null, refreshTrigger?: number) {
   const [detail, setDetail] = useState<SkillDetail | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -104,7 +150,7 @@ export function useSkillDetail(name: string | null) {
 
   useEffect(() => {
     fetchDetail();
-  }, [fetchDetail]);
+  }, [fetchDetail, refreshTrigger]);
 
   return { detail, loading, error, refetch: fetchDetail };
 }

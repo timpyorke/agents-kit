@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Terminal, Shapes } from "lucide-react";
 import "./App.css";
 
@@ -9,17 +9,45 @@ import { CraftCard } from "./components/CraftCard";
 import { Skills } from "./components/Skills";
 import { Marketplace } from "./components/Marketplace";
 import { CreateSkill } from "./components/CreateSkill";
-import { SkillDetailView } from "./components/SkillDetail";
 import { ProjectManager } from "./components/ProjectManager";
+import { SettingsPage } from "./components/Settings";
 
-import { useGlobalSkills } from "./hooks/useGlobalSkills";
+import { useGlobalSkills, useSkillsWatcher } from "./hooks/useGlobalSkills";
 import { ACTIVE_AGENTS, CRAFTABLE_SKILLS } from "./constants/data";
-import { Skill } from "./types";
+
+/** Global keyboard shortcuts */
+function useShortcuts(handlers: Record<string, () => void>) {
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      // Ignore when typing in inputs/textareas
+      const tag = (e.target as HTMLElement).tagName;
+      if (tag === "INPUT" || tag === "TEXTAREA" || (e.target as HTMLElement).isContentEditable) return;
+
+      const key = [
+        e.ctrlKey || e.metaKey ? "mod" : "",
+        e.shiftKey ? "shift" : "",
+        e.key.toLowerCase(),
+      ].filter(Boolean).join("+");
+
+      if (handlers[key]) {
+        e.preventDefault();
+        handlers[key]();
+      }
+    };
+    window.addEventListener("keydown", handler);
+    return () => window.removeEventListener("keydown", handler);
+  }, [handlers]);
+}
 
 function App() {
   const { globalSkills, refetch: refetchSkills } = useGlobalSkills();
   const [activeView, setActiveView] = useState("dashboard");
-  const [selectedSkill, setSelectedSkill] = useState<Skill | null>(null);
+
+  useSkillsWatcher((event) => {
+    if (event.kind === "deleted" || event.kind === "created") {
+      refetchSkills();
+    }
+  });
 
   const handleSkillCreated = () => {
     refetchSkills();
@@ -27,22 +55,6 @@ function App() {
   };
 
   const handleCancelCreateSkill = () => {
-    setActiveView("skills");
-  };
-
-  const handleSelectSkill = (skill: Skill) => {
-    setSelectedSkill(skill);
-    setActiveView("skill-detail");
-  };
-
-  const handleBackToSkills = () => {
-    setSelectedSkill(null);
-    setActiveView("skills");
-  };
-
-  const handleSkillDeleted = () => {
-    setSelectedSkill(null);
-    refetchSkills();
     setActiveView("skills");
   };
 
@@ -140,19 +152,15 @@ function App() {
         </main>
       ) : activeView === "skills" ? (
         <main className="main-container no-padding">
-          <Skills onSelectSkill={handleSelectSkill} onSkillDeleted={refetchSkills} />
-        </main>
-      ) : activeView === "skill-detail" && selectedSkill ? (
-        <main className="main-container">
-          <SkillDetailView
-            skill={selectedSkill}
-            onBack={handleBackToSkills}
-            onDeleted={handleSkillDeleted}
-          />
+          <Skills onSkillDeleted={refetchSkills} />
         </main>
       ) : activeView === "projects" ? (
         <main className="main-container">
           <ProjectManager onBack={() => setActiveView("dashboard")} />
+        </main>
+      ) : activeView === "settings" ? (
+        <main className="main-container">
+          <SettingsPage />
         </main>
       ) : activeView === "marketplace" ? (
         <main className="main-container">

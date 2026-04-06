@@ -6,12 +6,14 @@ import "./SkillDetail.css";
 
 interface SkillDetailProps {
   skill: Skill;
-  onBack: () => void;
+  onBack?: () => void;
   onDeleted: () => void;
+  embedded?: boolean;
+  refreshTrigger?: number;
 }
 
-export const SkillDetailView = ({ skill, onBack, onDeleted }: SkillDetailProps) => {
-  const { detail, loading, refetch } = useSkillDetail(skill.name);
+export const SkillDetailView = ({ skill, onBack, onDeleted, embedded, refreshTrigger }: SkillDetailProps) => {
+  const { detail, loading, refetch } = useSkillDetail(skill.name, refreshTrigger);
   const { updateSkill, loading: saving } = useUpdateSkill();
   const { deleteSkill, loading: deleting } = useDeleteSkill();
 
@@ -78,10 +80,12 @@ export const SkillDetailView = ({ skill, onBack, onDeleted }: SkillDetailProps) 
   return (
     <div className="skill-detail-view">
       <div className="sdv-header">
-        <button className="sdv-back-btn" onClick={onBack}>
-          <ArrowLeft size={18} />
-          <span>Back</span>
-        </button>
+        {!embedded && (
+          <button className="sdv-back-btn" onClick={onBack}>
+            <ArrowLeft size={18} />
+            <span>Back</span>
+          </button>
+        )}
         <div className="sdv-header-actions">
           {dirty && (
             <button className="sdv-save-btn" onClick={handleSave} disabled={saving}>

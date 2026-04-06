@@ -192,8 +192,8 @@
 }
 
 .skill-list-item.active {
-  border-color: #4c6ef5;
-  background-color: rgba(76, 110, 245, 0.02);
+  border-color: var(--primary);
+  background-color: var(--primary-container);
 }
 
 .skill-name {
