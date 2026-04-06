@@ -3,7 +3,8 @@ use std::collections::HashMap;
 use std::fs;
 use std::path::PathBuf;
 use std::sync::Mutex;
-use tauri::Manager;
+use tauri::{Emitter, Manager};
+use notify::Watcher;
 
 #[derive(Serialize, Deserialize, Clone)]
 pub struct Skill {
@@ -151,7 +152,12 @@ fn delete_skill(app_handle: tauri::AppHandle, name: String) -> Result<(), String
 
 #[tauri::command]
 fn get_skill_detail(app_handle: tauri::AppHandle, name: String) -> Result<SkillDetail, String> {
-    let skill_dir = get_skill_dir(&app_handle, &name)?;
+    let skill_dir = get_skill_detail_internal(&app_handle, &name)?;
+    Ok(skill_dir)
+}
+
+fn get_skill_detail_internal(app_handle: &tauri::AppHandle, name: &str) -> Result<SkillDetail, String> {
+    let skill_dir = get_skill_dir(app_handle, name)?;
 
     if !skill_dir.exists() {
         return Err(format!("Skill '{}' not found", name));
@@ -193,13 +199,7 @@ fn update_skill(
     }
     write_metadata(&skill_dir, &metadata)?;
 
-    Ok(SkillDetail {
-        name: metadata.name,
-        description: metadata.description,
-        content,
-        created_at: metadata.created_at,
-        path: skill_dir.to_string_lossy().into_owned(),
-    })
+    get_skill_detail_internal(&app_handle, &name)
 }
 
 #[tauri::command]
@@ -399,11 +399,10 @@ async fn run_streaming_command(
 fn check_agent_available(agent: String) -> Result<bool, String> {
     use std::process::Command;
     let output = if cfg!(target_os = "windows") {
-        Command::new("cmd").args(["/C", &format!("where {}", agent)])
+        Command::new("cmd").args(["/C", &format!("where {}", agent)]).output()
     } else {
-        Command::new("sh").args(["-c", &format!("which {}", agent)])
+        Command::new("sh").args(["-c", &format!("which {}", agent)]).output()
     }
-    .output()
     .map_err(|e| format!("Failed to check agent: {}", e))?;
 
     Ok(output.status.success())
@@ -421,11 +420,10 @@ fn get_agent_version(agent: String) -> Result<String, String> {
         _ => return Err(format!("Unknown agent: {}", agent)),
     };
     let output = if cfg!(target_os = "windows") {
-        Command::new("cmd").args(["/C", cmd])
+        Command::new("cmd").args(["/C", cmd]).output()
     } else {
-        Command::new("sh").args(["-c", cmd])
+        Command::new("sh").args(["-c", cmd]).output()
     }
-    .output()
     .map_err(|e| format!("Failed to get version: {}", e))?;
 
     let version = if output.status.success() {
