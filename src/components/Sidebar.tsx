@@ -36,12 +36,11 @@ export const Sidebar = ({ activeView, onViewChange }: SidebarProps) => (
             <span className="nav-text">Dashboard</span>
           </div>
           <div 
-            className={`nav-item ${activeView === 'skills' ? 'active' : ''}`}
+            className={`nav-item ${activeView === 'skills' || activeView === 'skill-detail' ? 'active' : ''}`}
             onClick={() => onViewChange('skills')}
           >
             <Puzzle size={20} />
             <span className="nav-text">All Skills</span>
-            <span className="nav-count">18</span>
           </div>
           <div 
             className={`nav-item ${activeView === 'marketplace' ? 'active' : ''}`}

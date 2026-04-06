@@ -123,6 +123,69 @@
   flex-shrink: 0;
 }
 
+.skill-item-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.skill-delete-btn {
+  background: transparent;
+  border: none;
+  color: var(--outline);
+  cursor: pointer;
+  padding: 0.25rem;
+  border-radius: var(--radius-md);
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  font-size: 0.6875rem;
+  font-weight: 600;
+  transition: all 0.2s ease;
+}
+
+.skill-delete-btn:hover {
+  color: var(--error);
+  background-color: rgba(158, 66, 44, 0.08);
+}
+
+.skill-delete-btn.confirm {
+  color: var(--error);
+  background-color: rgba(158, 66, 44, 0.08);
+  padding: 0.25rem 0.5rem;
+}
+
+.skill-date {
+  font-size: 0.6875rem;
+  color: var(--outline);
+  font-family: var(--font-label);
+}
+
+.skills-loading,
+.skills-empty,
+.skills-error {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 2rem;
+  color: var(--on-surface-variant);
+  font-size: 0.875rem;
+}
+
+.skills-error {
+  color: var(--error);
+}
+
+.spin {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
 .skill-list-item:hover {
   border-color: var(--outline-variant);
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);

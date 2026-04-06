@@ -1,40 +1,67 @@
 import React, { useState, useEffect } from "react";
-import { Plus, Terminal as TerminalIcon, Layout, ExternalLink, Folder, Edit2 } from "lucide-react";
+import { Plus, Terminal as TerminalIcon, Layout, ExternalLink, Folder, Loader2 } from "lucide-react";
 import { invoke } from "@tauri-apps/api/core";
 import { Terminal } from "./Terminal";
-import { Skill } from "../types";
+import { useCreateSkill, useGlobalSkills } from "../hooks/useGlobalSkills";
 import "./CreateSkill.css";
 
 interface CreateSkillProps {
   onSkillCreated: () => void;
   onCancel: () => void;
-  initialSkill?: Skill | null;
-  isEditing?: boolean;
 }
 
-export const CreateSkill = ({ onSkillCreated, onCancel, initialSkill, isEditing }: CreateSkillProps) => {
+export const CreateSkill = ({ onSkillCreated, onCancel }: CreateSkillProps) => {
   const [mode, setMode] = useState<"form" | "terminal">("form");
   const [workspaceDir, setWorkspaceDir] = useState<string>("Loading workspace...");
-  
-  const [skillName, setSkillName] = useState(initialSkill?.name || "");
-  const [skillDescription, setSkillDescription] = useState(initialSkill?.description || "");
-  const [skillCategory, setSkillCategory] = useState(initialSkill?.category || "");
-  const [skillAgent, setSkillAgent] = useState(initialSkill?.agents?.[0] || "");
-  
-  // Terminal session state
+
+  const [skillName, setSkillName] = useState("");
+  const [skillDescription, setSkillDescription] = useState("");
+  const [skillContent, setSkillContent] = useState("");
+  const [validationError, setValidationError] = useState<string | null>(null);
+
+  const { createSkill, loading: creating, error: createError } = useCreateSkill();
+  const { globalSkills } = useGlobalSkills();
+
   const [activeSession, setActiveSession] = useState<string | null>(null);
 
   useEffect(() => {
     invoke<string>("run_command", { command: "pwd" })
-      .then(dir => setWorkspaceDir(dir.trim()))
+      .then((dir) => setWorkspaceDir(dir.trim()))
       .catch(() => setWorkspaceDir("Unknown Directory"));
   }, []);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    console.log(isEditing ? "Updated Skill:" : "New Skill:", { skillName, skillDescription, skillCategory, skillAgent });
-    alert(`Skill ${isEditing ? "updated" : "created"} (mock data)!`);
-    onSkillCreated();
+    setValidationError(null);
+
+    const trimmedName = skillName.trim();
+    if (!trimmedName) {
+      setValidationError("Skill name is required.");
+      return;
+    }
+
+    if (!/^[a-zA-Z0-9_-]+$/.test(trimmedName)) {
+      setValidationError("Name can only contain letters, numbers, hyphens, and underscores.");
+      return;
+    }
+
+    const duplicate = globalSkills.some(
+      (s) => s.name.toLowerCase() === trimmedName.toLowerCase()
+    );
+    if (duplicate) {
+      setValidationError(`A skill named "${trimmedName}" already exists.`);
+      return;
+    }
+
+    const result = await createSkill(
+      trimmedName,
+      skillDescription.trim() || null,
+      skillContent.trim() || `# ${trimmedName}\n\nDescribe this skill...`
+    );
+
+    if (result) {
+      onSkillCreated();
+    }
   };
 
   const handleCommand = async (command: string): Promise<string> => {
@@ -43,7 +70,7 @@ export const CreateSkill = ({ onSkillCreated, onCancel, initialSkill, isEditing 
         setActiveSession(null);
         return `Exited ${activeSession} session.`;
       }
-      
+
       try {
         let cmd = "";
         if (activeSession === "gemini") {
@@ -53,7 +80,7 @@ export const CreateSkill = ({ onSkillCreated, onCancel, initialSkill, isEditing 
         } else {
           return `Unknown session: ${activeSession}`;
         }
-        
+
         const result = await invoke<string>("run_command", { command: cmd });
         return result;
       } catch (error) {
@@ -97,21 +124,21 @@ export const CreateSkill = ({ onSkillCreated, onCancel, initialSkill, isEditing 
       <div className="create-skill-header-section">
         <div className="title-row">
           <div className="title-group">
-            {isEditing ? <Edit2 size={28} className="icon-primary" /> : <Plus size={28} className="icon-primary" />}
-            <h2>{isEditing ? "Edit Skill" : "Create New Skill"}</h2>
+            <Plus size={28} className="icon-primary" />
+            <h2>Create New Skill</h2>
           </div>
-          
+
           <div className="mode-toggle">
-            <button 
-              className={`mode-btn ${mode === 'form' ? 'active' : ''}`}
-              onClick={() => setMode('form')}
+            <button
+              className={`mode-btn ${mode === "form" ? "active" : ""}`}
+              onClick={() => setMode("form")}
             >
               <Layout size={18} />
               <span>Guided Form</span>
             </button>
-            <button 
-              className={`mode-btn ${mode === 'terminal' ? 'active' : ''}`}
-              onClick={() => setMode('terminal')}
+            <button
+              className={`mode-btn ${mode === "terminal" ? "active" : ""}`}
+              onClick={() => setMode("terminal")}
             >
               <TerminalIcon size={18} />
               <span>Terminal (Advanced)</span>
@@ -119,9 +146,9 @@ export const CreateSkill = ({ onSkillCreated, onCancel, initialSkill, isEditing 
           </div>
         </div>
         <p className="create-skill-description">
-          {mode === 'form' 
-            ? `Define the characteristics and capabilities of your ${isEditing ? "existing" : "new"} agent skill using our guided interface.`
-            : `Use the terminal to directly interact with your agent's CLI and ${isEditing ? "modify" : "create"} skills from the command line.`}
+          {mode === "form"
+            ? "Define the characteristics and capabilities of your new agent skill."
+            : "Use the terminal to directly interact with your agent's CLI and create skills from the command line."}
         </p>
       </div>
 
@@ -135,8 +162,11 @@ export const CreateSkill = ({ onSkillCreated, onCancel, initialSkill, isEditing 
                   type="text"
                   id="skillName"
                   value={skillName}
-                  onChange={(e) => setSkillName(e.target.value)}
-                  placeholder="e.g., Image Generation, Code Refactor"
+                  onChange={(e) => {
+                    setSkillName(e.target.value);
+                    setValidationError(null);
+                  }}
+                  placeholder="e.g., image-generation, code-refactor"
                   required
                 />
               </div>
@@ -148,50 +178,53 @@ export const CreateSkill = ({ onSkillCreated, onCancel, initialSkill, isEditing 
                   value={skillDescription}
                   onChange={(e) => setSkillDescription(e.target.value)}
                   placeholder="Provide a brief explanation of what this skill does."
-                  rows={6}
-                  required
+                  rows={4}
+                ></textarea>
+              </div>
+
+              <div className="form-group">
+                <label htmlFor="skillContent">SKILL.md Content</label>
+                <textarea
+                  id="skillContent"
+                  value={skillContent}
+                  onChange={(e) => setSkillContent(e.target.value)}
+                  placeholder="Write the SKILL.md content here. Leave empty for a default template."
+                  rows={10}
+                  className="content-editor"
                 ></textarea>
               </div>
             </div>
 
             <div className="form-section-side">
-              <div className="form-group">
-                <label htmlFor="skillCategory">Category</label>
-                <input
-                  type="text"
-                  id="skillCategory"
-                  value={skillCategory}
-                  onChange={(e) => setSkillCategory(e.target.value)}
-                  placeholder="e.g., Design, Development"
-                  required
-                />
-              </div>
-
-              <div className="form-group">
-                <label htmlFor="skillAgent">Primary Agent</label>
-                <input
-                  type="text"
-                  id="skillAgent"
-                  value={skillAgent}
-                  onChange={(e) => setSkillAgent(e.target.value)}
-                  placeholder="e.g., Gemini CLI"
-                  required
-                />
-              </div>
-              
               <div className="info-box">
-                <h4>Pro Tip</h4>
-                <p>You can also use the terminal mode to import existing skills from a Git repository.</p>
+                <h4>Creating a Skill</h4>
+                <p>
+                  Skills are stored as SKILL.md files in your ~/.agent-skills directory. The name must
+                  be unique and contain only letters, numbers, hyphens, and underscores.
+                </p>
               </div>
             </div>
           </div>
+
+          {(validationError || createError) && (
+            <div className="form-error">
+              {validationError || createError}
+            </div>
+          )}
 
           <div className="form-actions">
             <button type="button" className="btn-secondary" onClick={onCancel}>
               Cancel
             </button>
-            <button type="submit" className="btn-primary">
-              {isEditing ? "Update Skill" : "Create Skill"}
+            <button type="submit" className="btn-primary" disabled={creating}>
+              {creating ? (
+                <>
+                  <Loader2 size={16} className="spin" />
+                  Creating...
+                </>
+              ) : (
+                "Create Skill"
+              )}
             </button>
           </div>
         </form>
@@ -203,20 +236,23 @@ export const CreateSkill = ({ onSkillCreated, onCancel, initialSkill, isEditing 
               <span>{workspaceDir}</span>
             </div>
             <div className="cli-launchers">
-              <button type="button" className="btn-launch" onClick={() => launchCLI('gemini')}>
+              <button type="button" className="btn-launch" onClick={() => launchCLI("gemini")}>
                 <ExternalLink size={14} /> Gemini CLI
               </button>
-              <button type="button" className="btn-launch" onClick={() => launchCLI('claude')}>
+              <button type="button" className="btn-launch" onClick={() => launchCLI("claude")}>
                 <ExternalLink size={14} /> Claude Code
               </button>
             </div>
           </div>
-          <Terminal 
-            onCommand={handleCommand} 
-            promptString={activeSession ? `${activeSession}>` : "$"} 
+          <Terminal
+            onCommand={handleCommand}
+            promptString={activeSession ? `${activeSession}>` : "$"}
           />
           <div className="terminal-info">
-            <p>Tip: Try running <code>ls -la</code> to see your current directory or <code>echo "Hello"</code> to test the connection.</p>
+            <p>
+              Tip: Try running <code>ls -la</code> to see your current directory or{" "}
+              <code>echo "Hello"</code> to test the connection.
+            </p>
           </div>
         </div>
       )}
