@@ -177,13 +177,13 @@ body {
 }
 
 .nav-item.active {
-  background-color: rgba(76, 110, 245, 0.1);
-  color: #4c6ef5;
+  background-color: var(--primary-container);
+  color: var(--on-primary-container);
   font-weight: 600;
 }
 
 .nav-item.active .nav-count {
-  color: #4c6ef5;
+  color: var(--on-primary-container);
 }
 
 .nav-section {
