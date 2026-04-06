@@ -4,7 +4,8 @@ import {
   Store,
   Plus,
   HelpCircle,
-  PenTool
+  PenTool,
+  FolderOpen
 } from "lucide-react";
 import { ACTIVE_AGENTS } from "../constants/data";
 
@@ -41,6 +42,13 @@ export const Sidebar = ({ activeView, onViewChange }: SidebarProps) => (
           >
             <Puzzle size={20} />
             <span className="nav-text">All Skills</span>
+          </div>
+          <div 
+            className={`nav-item ${activeView === 'projects' ? 'active' : ''}`}
+            onClick={() => onViewChange('projects')}
+          >
+            <FolderOpen size={20} />
+            <span className="nav-text">Projects</span>
           </div>
           <div 
             className={`nav-item ${activeView === 'marketplace' ? 'active' : ''}`}

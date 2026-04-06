@@ -1,0 +1,157 @@
+.project-manager {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  padding: 1.5rem;
+  height: 100%;
+  overflow-y: auto;
+}
+
+.pm-header {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.pm-header h2 {
+  font-family: "Manrope", sans-serif;
+  font-size: 1.75rem;
+  font-weight: 700;
+  margin: 0;
+  color: #31332c;
+}
+
+.pm-subtitle {
+  font-size: 0.875rem;
+  color: #797c73;
+  margin: 0.25rem 0 0;
+}
+
+.btn-back {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.5rem;
+  height: 2.5rem;
+  border: none;
+  border-radius: 0.75rem;
+  background: #f5f4ed;
+  color: #55514b;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: background 0.15s ease;
+}
+
+.btn-back:hover {
+  background: #ece1d2;
+}
+
+.pm-path-input {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.75rem 1rem;
+  border-radius: 9999px;
+  background: #e8e9e0;
+  transition: box-shadow 0.15s ease;
+}
+
+.pm-path-input:focus-within {
+  box-shadow: 0 0 0 1px rgba(177, 179, 169, 0.2);
+}
+
+.pm-folder-icon {
+  color: #797c73;
+  flex-shrink: 0;
+}
+
+.pm-path-input input {
+  flex: 1;
+  border: none;
+  background: transparent;
+  font-family: "Inter", sans-serif;
+  font-size: 0.875rem;
+  color: #31332c;
+  outline: none;
+  min-width: 0;
+}
+
+.pm-path-input input::placeholder {
+  color: #9e9f98;
+}
+
+.btn-open-project {
+  padding: 0.5rem 1.25rem;
+  border: none;
+  border-radius: 9999px;
+  background: #615e57;
+  color: #fdf7ee;
+  font-family: "Manrope", sans-serif;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: opacity 0.15s ease;
+}
+
+.btn-open-project:hover {
+  opacity: 0.9;
+}
+
+.pm-error {
+  padding: 0.75rem 1rem;
+  border-radius: 0.75rem;
+  background: #fce8e4;
+  color: #9e422c;
+  font-size: 0.8125rem;
+}
+
+.pm-content {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+}
+
+.pm-section {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.pm-section h3 {
+  font-family: "Manrope", sans-serif;
+  font-size: 1rem;
+  font-weight: 600;
+  color: #31332c;
+  margin: 0;
+}
+
+.pm-section-path {
+  font-family: "Inter", sans-serif;
+  font-size: 0.75rem;
+  color: #9e9f98;
+  margin: 0;
+}
+
+.pm-loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem;
+  color: #797c73;
+}
+
+.pm-empty {
+  padding: 1.5rem;
+  text-align: center;
+  font-size: 0.875rem;
+  color: #9e9f98;
+  background: #f5f4ed;
+  border-radius: 0.75rem;
+}
+
+.pm-skills-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}

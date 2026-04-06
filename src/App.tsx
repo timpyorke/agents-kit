@@ -10,6 +10,7 @@ import { Skills } from "./components/Skills";
 import { Marketplace } from "./components/Marketplace";
 import { CreateSkill } from "./components/CreateSkill";
 import { SkillDetailView } from "./components/SkillDetail";
+import { ProjectManager } from "./components/ProjectManager";
 
 import { useGlobalSkills } from "./hooks/useGlobalSkills";
 import { ACTIVE_AGENTS, CRAFTABLE_SKILLS } from "./constants/data";
@@ -148,6 +149,10 @@ function App() {
             onBack={handleBackToSkills}
             onDeleted={handleSkillDeleted}
           />
+        </main>
+      ) : activeView === "projects" ? (
+        <main className="main-container">
+          <ProjectManager onBack={() => setActiveView("dashboard")} />
         </main>
       ) : activeView === "marketplace" ? (
         <main className="main-container">
