@@ -142,6 +142,15 @@
   min-height: 0;
 }
 
+:root.dark .ai-terminal-wrapper,
+:root.dark .terminal-container {
+  background-color: #1a1c17;
+}
+
+:root.dark .ai-term-bar {
+  background-color: #141511;
+}
+
 .ai-term-bar {
   display: flex;
   justify-content: space-between;

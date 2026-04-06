@@ -1,4 +1,4 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import {
   Settings,
   FolderOpen,
@@ -8,6 +8,10 @@ import {
   Loader2,
   CheckCircle,
   AlertCircle,
+  RotateCcw,
+  Sun,
+  Moon,
+  Monitor,
 } from "lucide-react";
 import { invoke } from "@tauri-apps/api/core";
 import { useGlobalSkills } from "../hooks/useGlobalSkills";
@@ -23,6 +27,7 @@ export interface AppSettings {
   agents: AgentConfig[];
   defaultEditor: string;
   skillsDir: string;
+  theme: "light" | "dark" | "system";
 }
 
 const STORAGE_KEY = "agents-kit-settings";
@@ -45,6 +50,7 @@ export function loadSettings(): AppSettings {
     agents: DEFAULT_AGENTS,
     defaultEditor: "",
     skillsDir: "~/.agents/skills",
+    theme: "system",
   };
 }
 
@@ -54,7 +60,7 @@ function saveSettings(settings: AppSettings) {
 
 export const SettingsPage = () => {
   const { globalSkills, refetch } = useGlobalSkills();
-  const [settings, setSettings] = useState<AppSettings>(loadSettings);
+  const [settings, setSettings] = useState<AppSettings>(() => loadSettings());
   const [saved, setSaved] = useState(false);
   const [exporting, setExporting] = useState(false);
   const [importing, setImporting] = useState(false);
@@ -133,6 +139,37 @@ export const SettingsPage = () => {
   };
 
   const enabledCount = settings.agents.filter((a) => a.enabled).length;
+
+  // Apply theme
+  useEffect(() => {
+    const root = document.documentElement;
+    root.setAttribute("data-theme", settings.theme);
+    if (settings.theme === "dark" ||
+      (settings.theme === "system" && window.matchMedia("(prefers-color-scheme: dark)").matches)) {
+      root.classList.add("dark");
+    } else {
+      root.classList.remove("dark");
+    }
+  }, [settings.theme]);
+
+  // Auto-save on change (debounced)
+  const debounceRef = useRef<ReturnType<typeof setTimeout>>(undefined);
+  useEffect(() => {
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+    debounceRef.current = setTimeout(() => saveSettings(settings), 500);
+    return () => clearTimeout(debounceRef.current);
+  }, [settings]);
+
+  const handleReset = () => {
+    const defaults: AppSettings = {
+      agents: loadSettings().agents.map((a) => ({ ...a, enabled: false })),
+      defaultEditor: "",
+      skillsDir: "~/.agents/skills",
+      theme: "system",
+    };
+    setSettings(defaults);
+    flash("ok", "Settings reset to defaults.");
+  };
 
   return (
     <div className="settings-container">
@@ -274,8 +311,92 @@ export const SettingsPage = () => {
         </div>
       </section>
 
+      {/* Theme Section */}
+      <section className="settings-section">
+        <div className="section-head">
+          <div>
+            <h3>Appearance</h3>
+            <p className="section-desc">Theme preference</p>
+          </div>
+        </div>
+        <div className="settings-card-list">
+          <div className="settings-theme-row">
+            {(["light", "dark", "system"] as const).map((t) => (
+              <button
+                key={t}
+                className={`theme-option ${settings.theme === t ? "active" : ""}`}
+                onClick={() => setSettings((s) => ({ ...s, theme: t }))}
+              >
+                {t === "light" ? <Sun size={16} /> : t === "dark" ? <Moon size={16} /> : <Monitor size={16} />}
+                <span>{t.charAt(0).toUpperCase() + t.slice(1)}</span>
+              </button>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Keyboard Shortcuts Section */}
+      <section className="settings-section">
+        <div className="section-head">
+          <div>
+            <h3>Keyboard Shortcuts</h3>
+            <p className="section-desc">Quick navigation</p>
+          </div>
+        </div>
+        <div className="settings-card-list">
+          {[
+            ["Ctrl + N", "Create new skill"],
+            ["Ctrl + S", "Skills"],
+            ["Ctrl + M", "Marketplace"],
+            ["Ctrl + P", "Projects"],
+            ["Ctrl + A", "AI Console"],
+            ["Ctrl + ,", "Settings"],
+            ["Ctrl + Shift + S", "Dashboard"],
+            ["/", "Search skills"],
+          ].map(([key, desc]) => (
+            <div key={key} className="shortcut-row">
+              <span className="shortcut-desc">{desc}</span>
+              <kbd className="shortcut-key">{key}</kbd>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* About Section */}
+      <section className="settings-section">
+        <div className="section-head">
+          <div>
+            <h3>About</h3>
+          </div>
+        </div>
+        <div className="settings-card-list">
+          <div className="about-row">
+            <div className="about-item">
+              <span className="about-label">App</span>
+              <span className="about-value">Agents Kit</span>
+            </div>
+            <div className="about-item">
+              <span className="about-label">Version</span>
+              <span className="about-value">0.4.0</span>
+            </div>
+            <div className="about-item">
+              <span className="about-label">Skills</span>
+              <span className="about-value">{globalSkills.length} installed</span>
+            </div>
+            <div className="about-item">
+              <span className="about-label">Agents</span>
+              <span className="about-value">{enabledCount} enabled</span>
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* Save */}
       <div className="settings-save-bar">
+        <button className="settings-reset-btn" onClick={handleReset}>
+          <RotateCcw size={14} />
+          Reset
+        </button>
         <button className="settings-save-btn" onClick={handleSave}>
           {saved ? <CheckCircle size={16} /> : <Save size={16} />}
           {saved ? "Saved!" : "Save Settings"}

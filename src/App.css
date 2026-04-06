@@ -55,6 +55,36 @@
   -moz-osx-font-smoothing: grayscale;
 }
 
+:root.dark {
+  --background: #1c1e19;
+  --surface-container-low: #262820;
+  --surface-container-lowest: #1c1e19;
+  --surface-bright: #31332c;
+  --surface-dim: #797c73;
+  --surface-container-high: #31332c;
+  --surface-container-highest: #3d3f36;
+
+  --primary: #ccc7b8;
+  --primary-dim: #a9a49a;
+  --on-primary: #31332c;
+
+  --secondary-container: #3d3f36;
+  --on-secondary-container: #ccc7b8;
+
+  --primary-container: #3d3f36;
+  --on-primary-container: #ccc7b8;
+
+  --on-surface: #e2e4d9;
+  --on-surface-variant: #a89984;
+  --outline: #797c73;
+  --outline-variant: rgba(177, 179, 169, 0.12);
+
+  --error: #ef9a9a;
+  --on-error-container: #ef9a9a;
+
+  --shadow-ambient: 0px 12px 32px rgba(0, 0, 0, 0.2);
+}
+
 body {
   margin: 0;
   background-color: var(--background);

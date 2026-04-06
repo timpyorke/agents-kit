@@ -1,5 +1,5 @@
 import { useState, useMemo, useCallback } from "react";
-import { FolderOpen, ArrowLeft, Loader2 } from "lucide-react";
+import { FolderOpen, ArrowLeft, Loader2, FolderSearch } from "lucide-react";
 import "./ProjectManager.css";
 import "./ProjectSkillCard.css";
 import { ProjectSkillCard, AvailableSkillCard } from "./ProjectSkillCard";
@@ -35,6 +35,23 @@ export const ProjectManager = ({ onBack }: ProjectManagerProps) => {
   const handleOpenProject = async () => {
     if (!projectPath.trim()) return;
     setConfirmedPath(projectPath.trim());
+  };
+
+  const handleBrowse = async () => {
+    try {
+      const { open } = await import("@tauri-apps/plugin-dialog");
+      const selected = await open({
+        directory: true,
+        multiple: false,
+        title: "Select Project Folder",
+      });
+      if (selected) {
+        setProjectPath(selected);
+        setConfirmedPath(selected);
+      }
+    } catch (e) {
+      console.error("Dialog error:", e);
+    }
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
@@ -125,6 +142,10 @@ export const ProjectManager = ({ onBack }: ProjectManagerProps) => {
         />
         <button className="btn-open-project" onClick={handleOpenProject}>
           Open
+        </button>
+        <button className="btn-browse-project" onClick={handleBrowse}>
+          <FolderSearch size={16} />
+          Browse
         </button>
       </div>
 
