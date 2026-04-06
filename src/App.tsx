@@ -11,6 +11,7 @@ import { Marketplace } from "./components/Marketplace";
 import { CreateSkill } from "./components/CreateSkill";
 import { ProjectManager } from "./components/ProjectManager";
 import { SettingsPage } from "./components/Settings";
+import { AiIntegration } from "./components/AiIntegration";
 
 import { useGlobalSkills, useSkillsWatcher } from "./hooks/useGlobalSkills";
 import { ACTIVE_AGENTS, CRAFTABLE_SKILLS } from "./constants/data";
@@ -47,6 +48,18 @@ function App() {
     if (event.kind === "deleted" || event.kind === "created") {
       refetchSkills();
     }
+  });
+
+  // Keyboard shortcuts
+  useShortcuts({
+    "mod+n": () => setActiveView("create-skill"),
+    "mod+s": () => setActiveView("skills"),
+    "mod+m": () => setActiveView("marketplace"),
+    "mod+p": () => setActiveView("projects"),
+    "mod+,": () => setActiveView("settings"),
+    "mod+shift+s": () => setActiveView("dashboard"),
+    "mod+a": () => setActiveView("ai"),
+    "/": () => setActiveView("skills"),
   });
 
   const handleSkillCreated = () => {
@@ -161,6 +174,10 @@ function App() {
       ) : activeView === "settings" ? (
         <main className="main-container">
           <SettingsPage />
+        </main>
+      ) : activeView === "ai" ? (
+        <main className="main-container no-padding">
+          <AiIntegration />
         </main>
       ) : activeView === "marketplace" ? (
         <main className="main-container">

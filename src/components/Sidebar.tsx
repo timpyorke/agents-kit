@@ -7,7 +7,8 @@ import {
   HelpCircle,
   PenTool,
   FolderOpen,
-  Settings as SettingsIcon
+  Settings as SettingsIcon,
+  Bot
 } from "lucide-react";
 import { ACTIVE_AGENTS } from "../constants/data";
 import { loadSettings } from "../components/Settings";
@@ -64,6 +65,13 @@ export const Sidebar = ({ activeView, onViewChange }: SidebarProps) => {
             >
               <FolderOpen size={20} />
               <span className="nav-text">Projects</span>
+            </div>
+            <div 
+              className={`nav-item ${activeView === 'ai' ? 'active' : ''}`}
+              onClick={() => onViewChange('ai')}
+            >
+              <Bot size={20} />
+              <span className="nav-text">AI Console</span>
             </div>
             <div 
               className={`nav-item ${activeView === 'marketplace' ? 'active' : ''}`}

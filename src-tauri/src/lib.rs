@@ -338,6 +338,104 @@ async fn run_command(command: String) -> Result<String, String> {
     }
 }
 
+/// Run a shell command and stream output via Tauri events
+#[tauri::command]
+async fn run_streaming_command(
+    app_handle: tauri::AppHandle,
+    command: String,
+) -> Result<String, String> {
+    use std::process::{Command, Stdio};
+
+    let shell = if cfg!(target_os = "windows") { "cmd" } else { "sh" };
+    let flag = if cfg!(target_os = "windows") { "/C" } else { "-c" };
+
+    let child = Command::new(shell)
+        .args([flag, &command])
+        .stdout(Stdio::piped())
+        .stderr(Stdio::piped())
+        .spawn()
+        .map_err(|e| format!("Failed to spawn: {}", e))?;
+
+    let stdout = child.stdout.expect("stdout piped");
+    let stderr = child.stderr.expect("stderr piped");
+
+    use std::io::{BufRead, BufReader};
+
+    let app_clone = app_handle.clone();
+    let stdout_handle = std::thread::spawn(move || {
+        let reader = BufReader::new(stdout);
+        for line in reader.lines().flatten() {
+            let _ = app_clone.emit("terminal-output", serde_json::json!({
+                "type": "stdout",
+                "data": line,
+            }));
+        }
+    });
+
+    let app_clone2 = app_handle.clone();
+    let stderr_handle = std::thread::spawn(move || {
+        let reader = BufReader::new(stderr);
+        for line in reader.lines().flatten() {
+            let _ = app_clone2.emit("terminal-output", serde_json::json!({
+                "type": "stderr",
+                "data": line,
+            }));
+        }
+    });
+
+    stdout_handle.join().unwrap();
+    stderr_handle.join().unwrap();
+
+    let _ = app_handle.emit("terminal-output", serde_json::json!({
+        "type": "done",
+        "data": "",
+    }));
+
+    Ok("done".to_string())
+}
+
+/// Check if an agent CLI is available
+#[tauri::command]
+fn check_agent_available(agent: String) -> Result<bool, String> {
+    use std::process::Command;
+    let output = if cfg!(target_os = "windows") {
+        Command::new("cmd").args(["/C", &format!("where {}", agent)])
+    } else {
+        Command::new("sh").args(["-c", &format!("which {}", agent)])
+    }
+    .output()
+    .map_err(|e| format!("Failed to check agent: {}", e))?;
+
+    Ok(output.status.success())
+}
+
+/// Get agent version string
+#[tauri::command]
+fn get_agent_version(agent: String) -> Result<String, String> {
+    use std::process::Command;
+    let cmd = match agent.as_str() {
+        "claude" => "claude --version",
+        "codex" => "codex --version",
+        "gemini" => "gemini --version",
+        "opencode" => "opencode --version",
+        _ => return Err(format!("Unknown agent: {}", agent)),
+    };
+    let output = if cfg!(target_os = "windows") {
+        Command::new("cmd").args(["/C", cmd])
+    } else {
+        Command::new("sh").args(["-c", cmd])
+    }
+    .output()
+    .map_err(|e| format!("Failed to get version: {}", e))?;
+
+    let version = if output.status.success() {
+        String::from_utf8_lossy(&output.stdout).trim().to_string()
+    } else {
+        String::from_utf8_lossy(&output.stderr).trim().to_string()
+    };
+    Ok(version)
+}
+
 struct WatcherState {
     watchers: HashMap<String, notify::RecommendedWatcher>,
 }
@@ -450,6 +548,9 @@ pub fn run() {
         .invoke_handler(tauri::generate_handler![
             greet,
             run_command,
+            run_streaming_command,
+            check_agent_available,
+            get_agent_version,
             get_global_skills,
             create_skill,
             delete_skill,
@@ -464,4 +565,106 @@ pub fn run() {
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use std::io::Write;
+
+    fn temp_skills_dir() -> PathBuf {
+        let dir = std::env::temp_dir().join("agents-kit-test-").join(
+            std::time::SystemTime::now()
+                .duration_since(std::time::UNIX_EPOCH)
+                .unwrap()
+                .as_millis()
+                .to_string(),
+        );
+        let _ = fs::create_dir_all(&dir);
+        dir
+    }
+
+    fn create_test_skill(dir: &PathBuf, name: &str, desc: Option<&str>) {
+        let skill_dir = dir.join(name);
+        fs::create_dir_all(&skill_dir).unwrap();
+        fs::write(
+            skill_dir.join("SKILL.md"),
+            format!("# {}\nTest content", name),
+        )
+        .unwrap();
+        let meta = SkillMetadata {
+            name: name.to_string(),
+            description: desc.map(|s| s.to_string()),
+            created_at: chrono_now(),
+        };
+        write_metadata(&skill_dir, &meta).unwrap();
+    }
+
+    #[test]
+    fn test_read_write_metadata() {
+        let dir = temp_skills_dir();
+        let skill_dir = dir.join("test-skill");
+        fs::create_dir_all(&skill_dir).unwrap();
+
+        let meta = SkillMetadata {
+            name: "test-skill".to_string(),
+            description: Some("A test skill".to_string()),
+            created_at: "1234567890".to_string(),
+        };
+
+        write_metadata(&skill_dir, &meta).unwrap();
+        let read = read_metadata(&skill_dir).unwrap();
+
+        assert_eq!(read.name, meta.name);
+        assert_eq!(read.description, meta.description);
+        assert_eq!(read.created_at, meta.created_at);
+
+        let _ = fs::remove_dir_all(dir);
+    }
+
+    #[test]
+    fn test_read_metadata_missing_file() {
+        let dir = temp_skills_dir();
+        let skill_dir = dir.join("no-meta");
+        fs::create_dir_all(&skill_dir).unwrap();
+
+        let result = read_metadata(&skill_dir);
+        assert!(result.is_err());
+
+        let _ = fs::remove_dir_all(dir);
+    }
+
+    #[test]
+    fn test_chrono_now_returns_string() {
+        let ts = chrono_now();
+        assert!(!ts.is_empty());
+        let num: u64 = ts.parse().expect("chrono_now should return a numeric string");
+        assert!(num > 1_000_000_000); // after ~2001
+    }
+
+    #[test]
+    fn test_metadata_json_roundtrip() {
+        let meta = SkillMetadata {
+            name: "roundtrip".to_string(),
+            description: None,
+            created_at: "999".to_string(),
+        };
+        let json = serde_json::to_string_pretty(&meta).unwrap();
+        let parsed: SkillMetadata = serde_json::from_str(&json).unwrap();
+        assert_eq!(parsed.name, meta.name);
+        assert!(parsed.description.is_none());
+    }
+
+    #[test]
+    fn test_watch_dedup_insert_remove() {
+        let mut state = WatcherState {
+            watchers: HashMap::new(),
+        };
+        state.watchers.insert("a".to_string(), unreachable!());
+        state.watchers.insert("b".to_string(), unreachable!());
+        assert_eq!(state.watchers.len(), 2);
+        state.watchers.remove("a");
+        assert_eq!(state.watchers.len(), 1);
+        assert!(!state.watchers.contains_key("a"));
+    }
 }

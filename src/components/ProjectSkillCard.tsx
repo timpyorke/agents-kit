@@ -30,10 +30,18 @@ interface AvailableSkillProps {
   description?: string | null;
   onLink: () => void;
   linking: boolean;
+  draggable?: boolean;
+  skillName?: string;
 }
 
-export const AvailableSkillCard = ({ name, description, onLink, linking }: AvailableSkillProps) => (
-  <div className="available-skill-card">
+export const AvailableSkillCard = ({ name, description, onLink, linking, draggable, skillName }: AvailableSkillProps) => (
+  <div
+    className="available-skill-card"
+    draggable={draggable}
+    onDragStart={(e) => {
+      if (skillName) e.dataTransfer.setData("text/plain", skillName);
+    }}
+  >
     <div className="available-skill-info">
       <h4>{name}</h4>
       {description && <p>{description}</p>}

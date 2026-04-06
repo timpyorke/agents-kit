@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useCallback } from "react";
 import { FolderOpen, ArrowLeft, Loader2 } from "lucide-react";
 import "./ProjectManager.css";
 import "./ProjectSkillCard.css";
@@ -17,6 +17,7 @@ export const ProjectManager = ({ onBack }: ProjectManagerProps) => {
   const [linkingSkill, setLinkingSkill] = useState<string | null>(null);
   const [unlinkingSkill, setUnlinkingSkill] = useState<string | null>(null);
   const [linkError, setLinkError] = useState<string | null>(null);
+  const [dragOver, setDragOver] = useState(false);
 
   const { projectSkills, loading, refetch } = useProjectSkills(confirmedPath);
   const { globalSkills } = useGlobalSkills();
@@ -54,6 +55,37 @@ export const ProjectManager = ({ onBack }: ProjectManagerProps) => {
       setLinkingSkill(null);
     }
   };
+
+  const handleDragOver = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = "copy";
+    setDragOver(true);
+  }, []);
+
+  const handleDragLeave = useCallback(() => {
+    setDragOver(false);
+  }, []);
+
+  const handleDrop = useCallback(async (e: React.DragEvent) => {
+    e.preventDefault();
+    setDragOver(false);
+    const skillName = e.dataTransfer.getData("text/plain");
+    if (!skillName || !confirmedPath) return;
+    const skill = globalSkills.find((s) => s.name === skillName);
+    if (skill) {
+      setLinkingSkill(skill.name);
+      setLinkError(null);
+      try {
+        const { invoke } = await import("@tauri-apps/api/core");
+        await invoke("link_skill_to_project", { skillName: skill.name, projectPath: confirmedPath });
+        refetch();
+      } catch (err: unknown) {
+        setLinkError(String(err));
+      } finally {
+        setLinkingSkill(null);
+      }
+    }
+  }, [confirmedPath, globalSkills, refetch]);
 
   const handleUnlink = async (skillName: string) => {
     if (!confirmedPath) return;
@@ -106,9 +138,21 @@ export const ProjectManager = ({ onBack }: ProjectManagerProps) => {
             {loading ? (
               <div className="pm-loading"><Loader2 size={20} className="spin" /></div>
             ) : projectSkills.length === 0 ? (
-              <div className="pm-empty">No skills linked yet</div>
+              <div
+                className={`pm-empty ${dragOver ? "pm-drop-target" : ""}`}
+                onDragOver={handleDragOver}
+                onDragLeave={handleDragLeave}
+                onDrop={handleDrop}
+              >
+                {dragOver ? "Drop skill here to link" : "No skills linked yet — drag a skill here"}
+              </div>
             ) : (
-              <div className="pm-skills-list">
+              <div
+                className={`pm-skills-list ${dragOver ? "pm-drop-target" : ""}`}
+                onDragOver={handleDragOver}
+                onDragLeave={handleDragLeave}
+                onDrop={handleDrop}
+              >
                 {projectSkills.map((skill) => (
                   <ProjectSkillCard
                     key={skill.name}
@@ -132,6 +176,8 @@ export const ProjectManager = ({ onBack }: ProjectManagerProps) => {
                     description={skill.description}
                     onLink={() => handleLink(skill)}
                     linking={linkingSkill === skill.name}
+                    draggable
+                    skillName={skill.name}
                   />
                 ))}
               </div>
